@@ -1,0 +1,14 @@
+# Anonchat
+
+A simple websocket chat server/client project.
+
+You can:
+- Customize your nickname
+- Enter / leave channels
+- Talk on channel (one channel only)
+
+You can't:
+- Almost everything
+- Trust this is safe
+- Trust this is ready
+
