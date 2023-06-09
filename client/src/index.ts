@@ -13,8 +13,19 @@ ws.on("open", () => {
   rl.prompt();
 });
 
-ws.on("message", (message) => {
-  console.log(message.toString());
+ws.on("message", (byteMsg) => {
+  let serverMsg = { senderNick: "", message: "", timestamp: "" };
+
+  try {
+    serverMsg = JSON.parse(byteMsg.toString());
+  } catch {
+    console.log(" AnnonChat - Server tried to send a message but couldn't :(");
+  }
+
+  const { senderNick, message, timestamp } = serverMsg;
+
+  const time = new Date(Number(timestamp)).toLocaleTimeString();
+  console.log(`[${time}] [${senderNick}]: ${message}`);
 });
 
 ws.on("close", () => {

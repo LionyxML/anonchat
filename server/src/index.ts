@@ -1,6 +1,9 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { createStore } from "zustand/vanilla";
 
+const SERVER_NAME = "AnnonChat";
+const SERVER_NICK = "SERVER";
+
 interface IChannels {
   [key: string]: number[];
 }
@@ -19,6 +22,13 @@ const store = createStore<IStoreState>(() => ({
   clientsNicks: [],
 }));
 
+const formatClientMsg = (senderNick: string, message: string) =>
+  JSON.stringify({
+    senderNick,
+    message,
+    timestamp: Date.now().toString(),
+  });
+
 const currentUserChannels = (client: number): Array<string | null> => {
   const { channels } = store.getState();
 
@@ -30,14 +40,18 @@ const currentUserChannels = (client: number): Array<string | null> => {
 const broadcastChannelMessage = (
   message: string,
   channel: string,
-  wsClient: WebSocket
+  wsClient: WebSocket,
+  isServerMessage = false
 ) => {
   const { getState } = store;
 
   const senderNick =
     getState().clientsNicks[getState().clients.indexOf(wsClient)];
   const channelClients = getState().channels[channel];
-  const channelMessage = JSON.stringify({ senderNick, message });
+  const channelMessage = formatClientMsg(
+    isServerMessage ? SERVER_NICK : senderNick,
+    message
+  );
 
   for (const clientNumber of channelClients) {
     getState().clients[clientNumber].send(channelMessage);
@@ -98,10 +112,6 @@ const addUserToChannel = (channelName: string, clientId: number) => {
 const removeUserFromChannel = (channelName: string, clientId: number) => {
   const { setState, getState } = store;
 
-  const clientIndex = [...getState().channels[channelName]].indexOf(clientId);
-
-  console.log("clientIndex", { clientIndex });
-
   const newChannelUserList = [...getState().channels[channelName]].filter(
     (channelVisitorId) => channelVisitorId !== clientId
   );
@@ -147,18 +157,25 @@ wss.on("connection", (ws) => {
 
   addClientNick(`client#${getState().clients.indexOf(ws)}`);
 
-  ws.send(`
-  Welcome to the server!
-  
-  Clients count: ${getState().clients.length}
-  Your nickname is ${getState().clientsNicks[getState().clients.indexOf(ws)]}
-  
-  /channels             - lists all channels
-  /nick [new_nickname]  - changes your nickname
-  /join [#channel]      - joins #channel creating it if needed
-  /part                 - leaves the channel
-  /quit                 - exits the server
-  `);
+  ws.send(
+    formatClientMsg(
+      SERVER_NICK,
+      `
+  |
+  | Welcome to the server ${SERVER_NAME}!
+  |
+  | Clients count: ${getState().clients.length}
+  | Your nickname is ${getState().clientsNicks[getState().clients.indexOf(ws)]}
+  |
+  | /channels             - lists all channels
+  | /nick [new_nickname]  - changes your nickname
+  | /join [#channel]      - joins #channel creating it if needed
+  | /part                 - leaves the channel
+  | /quit                 - exits the server
+  |
+  `
+    )
+  );
 
   ws.on("message", (message) => {
     const parsedMessage = message.toString().split(" ");
@@ -174,10 +191,15 @@ wss.on("connection", (ws) => {
     if (!isCommand) {
       if (userCurrentChannels.length === 0) {
         ws.send(
-          "Error: you're not inside any channel. Try /join #channel_name"
+          formatClientMsg(
+            SERVER_NICK,
+            "Error: you're not inside any channel. Try /join #channel_name"
+          )
         );
         return;
       }
+
+      if (message.toString().trim() === "") return;
 
       broadcastChannelMessage(message.toString(), userCurrentChannel, ws);
 
@@ -186,20 +208,31 @@ wss.on("connection", (ws) => {
 
     switch (parsedMessage[0].toLowerCase()) {
       case "/part": {
-        // check if user is in channel
-        // send message of error or broadcast to channel user is leaving
-
-        console.log({ userCurrentChannel });
         if (userCurrentChannel === "undefined") {
           ws.send(
-            "Error: You're not in any channel. There's nowhere to part of."
+            formatClientMsg(
+              SERVER_NICK,
+              "Error: You're not in any channel. There's nowhere to part of."
+            )
           );
           break;
         }
 
         removeUserFromChannel(userCurrentChannel, clientId);
 
-        ws.send(`You left the channel #${userCurrentChannel}`);
+        ws.send(
+          formatClientMsg(
+            SERVER_NICK,
+            `You left the channel #${userCurrentChannel}`
+          )
+        );
+
+        broadcastChannelMessage(
+          `${clientNick} left ${userCurrentChannel}`,
+          userCurrentChannel,
+          ws,
+          true
+        );
 
         break;
       }
@@ -207,20 +240,31 @@ wss.on("connection", (ws) => {
       case "/join": {
         if (userCurrentChannels.length > 0) {
           ws.send(
-            `Error: You alread joined: ${userCurrentChannels.join(", ")}`
+            formatClientMsg(
+              SERVER_NICK,
+              `Error: You alread joined: ${userCurrentChannels.join(", ")}`
+            )
           );
-          ws.send(`Try /part before /join`);
+          ws.send(formatClientMsg(SERVER_NICK, `Try /part before /join`));
           break;
         }
 
         if (!parsedMessage[1]) {
-          ws.send(`Did you forget to add a channel name? Try "/join #help"`);
+          ws.send(
+            formatClientMsg(
+              SERVER_NICK,
+              `Did you forget to add a channel name? Try "/join #help"`
+            )
+          );
           break;
         }
 
         if (!parsedMessage[1].match(/^#/)) {
           ws.send(
-            `Did you forget to prefix the channel name with #? Try "/join #help"`
+            formatClientMsg(
+              SERVER_NICK,
+              `Did you forget to prefix the channel name with #? Try "/join #help"`
+            )
           );
           break;
         }
@@ -229,13 +273,15 @@ wss.on("connection", (ws) => {
 
         if (!channelName) {
           ws.send(
-            `Did you forget to provide a name to your channel? Try "/join #help"`
+            formatClientMsg(
+              SERVER_NICK,
+              `Did you forget to provide a name to your channel? Try "/join #help"`
+            )
           );
           break;
         }
 
         if (!checkChannelExistence(getState().channels, channelName)) {
-          console.log("channel does not exist, creating it....");
           createChannel(channelName);
         }
 
@@ -244,7 +290,8 @@ wss.on("connection", (ws) => {
         broadcastChannelMessage(
           `${clientNick} just joined #${channelName}!`,
           channelName,
-          ws
+          ws,
+          true
         );
 
         break;
@@ -260,7 +307,12 @@ wss.on("connection", (ws) => {
         const nickName = parsedMessage[1];
 
         if (!nickName) {
-          ws.send(`Did you forget to send a nickname? Try "/nick Dory"`);
+          ws.send(
+            formatClientMsg(
+              SERVER_NICK,
+              `Did you forget to send a nickname? Try "/nick Dory"`
+            )
+          );
           break;
         }
 
@@ -269,18 +321,25 @@ wss.on("connection", (ws) => {
             .clientsNicks.map((nick) => nick.toLowerCase())
             .includes(nickName.toLowerCase())
         ) {
-          ws.send(`This nick is already taken, choose another one.`);
+          ws.send(
+            formatClientMsg(
+              SERVER_NICK,
+              `This nick is already taken, choose another one.`
+            )
+          );
           break;
         }
 
         changeNick(clientId, nickName);
 
-        ws.send(`Your nickname is now: ${nickName}`);
+        ws.send(
+          formatClientMsg(SERVER_NICK, `Your nickname is now: ${nickName}`)
+        );
         break;
       }
 
       default:
-        ws.send(`Command not recognized!`);
+        ws.send(formatClientMsg(SERVER_NICK, `Command not recognized!`));
         break;
     }
   });
