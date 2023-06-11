@@ -35,7 +35,8 @@ export const broadcastChannelMessage = (
   );
 
   for (const clientNumber of channelClients) {
-    getState().clients[clientNumber].send(channelMessage);
+    getState().clients[clientNumber] &&
+      getState().clients[clientNumber].send(channelMessage);
   }
 };
 
@@ -111,6 +112,21 @@ export const removeUserFromChannel = (
       },
     };
   });
+};
+
+export const removeUserFromServer = (clientId: number) => {
+  const currentState = { ...store.getState() };
+  const newState = {
+    ...currentState,
+    clients: currentState.clients
+      .splice(0, clientId)
+      .concat(currentState.clients.splice(clientId + 1)),
+    clientsNicks: currentState.clientsNicks
+      .splice(0, clientId)
+      .concat(currentState.clientsNicks.splice(clientId + 1)),
+  };
+
+  store.setState(() => ({ ...newState }));
 };
 
 export const changeNick = (clientId: number, nickName: string) => {

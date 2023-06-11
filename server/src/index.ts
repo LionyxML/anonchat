@@ -12,6 +12,7 @@ import {
   currentUserChannels,
   formatClientMsg,
   removeUserFromChannel,
+  removeUserFromServer,
 } from "./helpers";
 import { SERVER_NAME, SERVER_NICK, SERVER_PORT } from "./config";
 
@@ -29,10 +30,10 @@ const wss = new WebSocketServer({ port: Number(SERVER_PORT) }, () =>
 
 wss.on("connection", (ws) => {
   const { getState } = store;
+
   console.log("New client connected");
 
   addClient(ws);
-
   addClientNick(`client#${getState().clients.indexOf(ws)}`);
 
   ws.send(
@@ -176,9 +177,17 @@ wss.on("connection", (ws) => {
       }
 
       case "/quit":
-        // just send message
-        // send a message of quiting to channel
-        // on disconnect: free nickname, channels and ws clients array
+        if (userCurrentChannel !== "undefined")
+          broadcastChannelMessage(
+            `${clientNick} has disconnected...`,
+            userCurrentChannel,
+            ws,
+            true
+          );
+        ws.send(formatClientMsg(SERVER_NICK, "You are now disconnected. Bye!"));
+        ws.close();
+
+        removeUserFromServer(clientId);
         break;
 
       case "/channels":
@@ -221,7 +230,7 @@ wss.on("connection", (ws) => {
 
         changeNick(clientId, nickName);
 
-        if (!(userCurrentChannel === "undefined"))
+        if (userCurrentChannel !== "undefined")
           broadcastChannelMessage(
             `${clientNick} changed its nickname to: ${nickName}!`,
             userCurrentChannel,

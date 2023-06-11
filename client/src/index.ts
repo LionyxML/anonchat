@@ -30,6 +30,7 @@ ws.on("message", (byteMsg) => {
 
 ws.on("close", () => {
   console.log("  AnnonChat - Disconnected from the server");
+  process.exit(0);
 });
 
 rl.on("line", (input) => {
