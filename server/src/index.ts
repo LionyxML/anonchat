@@ -43,7 +43,7 @@ wss.on("connection", (ws) => {
   |
   | Welcome to the server ${SERVER_NAME}!
   |
-  | Clients count: ${getState().clients.length}
+  | Clients count: ${getState().clientsNicks.length}
   | Your nickname is ${getState().clientsNicks[getState().clients.indexOf(ws)]}
   |
   | /channels             - lists all channels
@@ -248,13 +248,10 @@ wss.on("connection", (ws) => {
         ws.send(formatClientMsg(SERVER_NICK, `Command not recognized!`));
         break;
     }
-
-    console.log("state >>>", { ">": store.getState() });
   });
 });
 
-// TODO: - there's some jank happening when disconnecting a user
-//         some other might get out of a channel :D
+// TODO:
 //       - periodical heartbeat to each client and cleanup
 //       - periodical empty channel cleanup
 //       - configurable max client limit

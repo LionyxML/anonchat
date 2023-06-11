@@ -116,14 +116,25 @@ export const removeUserFromChannel = (
 
 export const removeUserFromServer = (clientId: number) => {
   const currentState = { ...store.getState() };
+  const userCurrentChannel = currentUserChannels(clientId)[0];
+
   const newState = {
     ...currentState,
-    clients: currentState.clients
-      .splice(0, clientId)
-      .concat(currentState.clients.splice(clientId + 1)),
-    clientsNicks: currentState.clientsNicks
-      .splice(0, clientId)
-      .concat(currentState.clientsNicks.splice(clientId + 1)),
+    clientsNicks: [
+      ...currentState.clientsNicks.map((nick: string, id: number) =>
+        clientId === id ? null : nick
+      ),
+    ],
+    channels: {
+      ...currentState.channels,
+      ...(userCurrentChannel
+        ? {
+            [userCurrentChannel]: currentState.channels[
+              userCurrentChannel
+            ].filter((user: number) => user !== clientId),
+          }
+        : {}),
+    },
   };
 
   store.setState(() => ({ ...newState }));
