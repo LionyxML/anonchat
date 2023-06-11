@@ -253,7 +253,9 @@ wss.on("connection", (ws) => {
   });
 });
 
-// TODO: - periodical heartbeat to each client and cleanup
+// TODO: - there's some jank happening when disconnecting a user
+//         some other might get out of a channel :D
+//       - periodical heartbeat to each client and cleanup
 //       - periodical empty channel cleanup
 //       - configurable max client limit
 //       - configurable server password
