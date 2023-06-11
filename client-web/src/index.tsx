@@ -1,5 +1,14 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 import App from "./App";
+import { CssBaseline } from "@suid/material";
 
-render(() => <App />, document.getElementById("root")!);
+render(
+  () => (
+    <>
+      <CssBaseline sx={{ fontFamily: "Space Mono" }} />
+      <App />
+    </>
+  ),
+  document.getElementById("root")!
+);

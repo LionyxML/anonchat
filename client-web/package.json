@@ -1,14 +1,14 @@
 {
   "name": "client-web",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "vite build",
     "start": "vite"
   },
   "dependencies": {
-    "@suid/material": "*",
     "@suid/icons-material": "*",
+    "@suid/material": "*",
     "solid-js": "*"
   },
   "devDependencies": {
