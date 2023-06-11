@@ -248,5 +248,12 @@ wss.on("connection", (ws) => {
         ws.send(formatClientMsg(SERVER_NICK, `Command not recognized!`));
         break;
     }
+
+    console.log("state >>>", { ">": store.getState() });
   });
 });
+
+// TODO: - periodical heartbeat to each client and cleanup
+//       - periodical empty channel cleanup
+//       - configurable max client limit
+//       - configurable server password

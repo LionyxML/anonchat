@@ -37,9 +37,12 @@ rl.on("line", (input) => {
   ws.send(input);
 
   rl.prompt();
+  process.stdout.write("\u001B[1A\u001B[2K");
 });
 
 rl.on("close", () => {
-  console.log("  AnnonChat - Exiting the client");
+  console.log(
+    "  AnnonChat - Exiting the client. Shame on you. Use /quit next time."
+  );
   process.exit(0);
 });
