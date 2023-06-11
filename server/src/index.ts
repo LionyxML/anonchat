@@ -332,6 +332,14 @@ wss.on("connection", (ws) => {
 
         changeNick(clientId, nickName);
 
+        if (!(userCurrentChannel === "undefined"))
+          broadcastChannelMessage(
+            `${clientNick} changed its nickname to: ${nickName}!`,
+            userCurrentChannel,
+            ws,
+            true
+          );
+
         ws.send(
           formatClientMsg(SERVER_NICK, `Your nickname is now: ${nickName}`)
         );

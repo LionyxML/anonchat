@@ -20,5 +20,6 @@ const implNewStore = (createState: any) => {
   return api as any;
 };
 
+// TODO: Proper typing on createState
 export const createStore = <T>(createState: () => T) =>
   createState ? implNewStore(createState) : implNewStore;
