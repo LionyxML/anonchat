@@ -1,20 +1,21 @@
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import { createStore } from "./store";
+import { IStoreState } from "./index.d";
+import {
+  addClient,
+  addClientNick,
+  addUserToChannel,
+  broadcastChannelMessage,
+  changeNick,
+  checkChannelExistence,
+  createChannel,
+  currentUserChannels,
+  formatClientMsg,
+  removeUserFromChannel,
+} from "./helpers";
+import { SERVER_NAME, SERVER_NICK, SERVER_PORT } from "./config";
 
-const SERVER_NAME = "AnnonChat";
-const SERVER_NICK = "SERVER";
-
-interface IChannels {
-  [key: string]: number[];
-}
-
-interface IStoreState {
-  clients: WebSocket[];
-  channels: IChannels;
-  clientsNicks: string[];
-}
-
-const store = createStore<IStoreState>(() => ({
+export const store = createStore<IStoreState>(() => ({
   clients: [],
   channels: {
     help: [],
@@ -22,131 +23,8 @@ const store = createStore<IStoreState>(() => ({
   clientsNicks: [],
 }));
 
-const formatClientMsg = (senderNick: string, message: string) =>
-  JSON.stringify({
-    senderNick,
-    message,
-    timestamp: Date.now().toString(),
-  });
-
-const currentUserChannels = (client: number): Array<string | null> => {
-  const { channels } = store.getState();
-
-  return Object.keys(channels)
-    .map((chan) => (channels[chan].includes(client) ? chan : null))
-    .filter(Boolean);
-};
-
-const broadcastChannelMessage = (
-  message: string,
-  channel: string,
-  wsClient: WebSocket,
-  isServerMessage = false
-) => {
-  const { getState } = store;
-
-  const senderNick =
-    getState().clientsNicks[getState().clients.indexOf(wsClient)];
-  const channelClients = getState().channels[channel];
-  const channelMessage = formatClientMsg(
-    isServerMessage ? SERVER_NICK : senderNick,
-    message
-  );
-
-  for (const clientNumber of channelClients) {
-    getState().clients[clientNumber].send(channelMessage);
-  }
-};
-
-const checkChannelExistence = (
-  allChannels: IChannels,
-  channelName: string
-): boolean => Object.keys(allChannels).includes(channelName);
-
-const createChannel = (channelName: string) => {
-  const { setState } = store;
-
-  setState((state: IStoreState) => ({
-    ...state,
-    channels: {
-      ...state.channels,
-      [channelName]: [],
-    },
-  }));
-};
-
-const addClient = (ws: WebSocket) => {
-  const { setState } = store;
-
-  setState((state: IStoreState) => ({
-    ...state,
-    clients: [...state.clients, ws],
-  }));
-};
-
-const addClientNick = (nick: string) => {
-  const { setState } = store;
-
-  setState((state: IStoreState) => ({
-    ...state,
-    clientsNicks: [...state.clientsNicks, nick],
-  }));
-};
-
-const addUserToChannel = (channelName: string, clientId: number) => {
-  const { setState } = store;
-
-  setState((state: IStoreState) => {
-    return {
-      ...state,
-      channels: {
-        ...state.channels,
-        ...{
-          [channelName]: [...(state.channels[channelName] || {}), clientId],
-        },
-      },
-    };
-  });
-};
-
-const removeUserFromChannel = (channelName: string, clientId: number) => {
-  const { setState, getState } = store;
-
-  const newChannelUserList = [...getState().channels[channelName]].filter(
-    (channelVisitorId) => channelVisitorId !== clientId
-  );
-
-  setState((state: IStoreState) => {
-    return {
-      ...state,
-      channels: {
-        ...state.channels,
-        ...{
-          [channelName]: [...newChannelUserList],
-        },
-      },
-    };
-  });
-};
-
-const changeNick = (clientId: number, nickName: string) => {
-  const { setState, getState } = store;
-
-  const newClientsNicks = [...getState().clientsNicks];
-
-  newClientsNicks.splice(clientId, 1);
-  newClientsNicks.splice(clientId, 0, nickName);
-
-  setState((state: IStoreState) => {
-    return {
-      ...state,
-      clientsNicks: [...newClientsNicks],
-    };
-  });
-};
-
-const wss = new WebSocketServer({ port: 6969 }, () =>
-  console.log(">>> AnonChat Server Loaded")
+const wss = new WebSocketServer({ port: Number(SERVER_PORT) }, () =>
+  console.log(`>>> ${SERVER_NAME} Server Loaded`)
 );
 
 wss.on("connection", (ws) => {
@@ -168,8 +46,8 @@ wss.on("connection", (ws) => {
   | Your nickname is ${getState().clientsNicks[getState().clients.indexOf(ws)]}
   |
   | /channels             - lists all channels
-  | /nick [new_nickname]  - changes your nickname
   | /join [#channel]      - joins #channel creating it if needed
+  | /nick [new_nickname]  - changes your nickname
   | /part                 - leaves the channel
   | /quit                 - exits the server
   |
@@ -301,6 +179,17 @@ wss.on("connection", (ws) => {
         // just send message
         // send a message of quiting to channel
         // on disconnect: free nickname, channels and ws clients array
+        break;
+
+      case "/channels":
+        ws.send(
+          formatClientMsg(
+            SERVER_NICK,
+            `Server channels: ${Object.keys(store.getState().channels)
+              .map((chan: string) => `#${chan}`)
+              .join(", ")}`
+          )
+        );
         break;
 
       case "/nick": {
