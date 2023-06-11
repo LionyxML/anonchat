@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from "ws";
-import { createStore } from "zustand/vanilla";
+import { createStore } from "./store";
 
 const SERVER_NAME = "AnnonChat";
 const SERVER_NICK = "SERVER";
@@ -66,7 +66,7 @@ const checkChannelExistence = (
 const createChannel = (channelName: string) => {
   const { setState } = store;
 
-  setState((state) => ({
+  setState((state: IStoreState) => ({
     ...state,
     channels: {
       ...state.channels,
@@ -78,7 +78,7 @@ const createChannel = (channelName: string) => {
 const addClient = (ws: WebSocket) => {
   const { setState } = store;
 
-  setState((state) => ({
+  setState((state: IStoreState) => ({
     ...state,
     clients: [...state.clients, ws],
   }));
@@ -87,7 +87,7 @@ const addClient = (ws: WebSocket) => {
 const addClientNick = (nick: string) => {
   const { setState } = store;
 
-  setState((state) => ({
+  setState((state: IStoreState) => ({
     ...state,
     clientsNicks: [...state.clientsNicks, nick],
   }));
@@ -96,7 +96,7 @@ const addClientNick = (nick: string) => {
 const addUserToChannel = (channelName: string, clientId: number) => {
   const { setState } = store;
 
-  setState((state) => {
+  setState((state: IStoreState) => {
     return {
       ...state,
       channels: {
@@ -116,7 +116,7 @@ const removeUserFromChannel = (channelName: string, clientId: number) => {
     (channelVisitorId) => channelVisitorId !== clientId
   );
 
-  setState((state) => {
+  setState((state: IStoreState) => {
     return {
       ...state,
       channels: {
@@ -137,7 +137,7 @@ const changeNick = (clientId: number, nickName: string) => {
   newClientsNicks.splice(clientId, 1);
   newClientsNicks.splice(clientId, 0, nickName);
 
-  setState((state) => {
+  setState((state: IStoreState) => {
     return {
       ...state,
       clientsNicks: [...newClientsNicks],
@@ -318,7 +318,7 @@ wss.on("connection", (ws) => {
 
         if (
           getState()
-            .clientsNicks.map((nick) => nick.toLowerCase())
+            .clientsNicks.map((nick: string) => nick.toLowerCase())
             .includes(nickName.toLowerCase())
         ) {
           ws.send(
