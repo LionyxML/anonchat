@@ -1,0 +1,20 @@
+{
+  "name": "client-web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "start": "vite"
+  },
+  "dependencies": {
+    "@suid/material": "*",
+    "@suid/icons-material": "*",
+    "solid-js": "*"
+  },
+  "devDependencies": {
+    "@suid/vite-plugin": "*",
+    "typescript": "^4.8.2",
+    "vite": "*",
+    "vite-plugin-solid": "*"
+  }
+}
