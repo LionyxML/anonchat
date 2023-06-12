@@ -2,7 +2,7 @@
 
 A simple websocket chat server/client project.
 
-Suggested architeture if you're using `docker-compose`:
+Suggested architeture if you're using =docker-compose=:
 
 #+BEGIN_SRC artist-mode
 
