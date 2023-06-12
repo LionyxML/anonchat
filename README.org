@@ -2,6 +2,12 @@
 
 A simple websocket chat server/client project.
 
+[[file:doc/demo1.png]]
+
+[[file:doc/demo2.png]]
+
+[[file:doc/demo3.png]]
+
 Suggested architeture if you're using =docker-compose=:
 
 #+BEGIN_SRC artist-mode
@@ -89,7 +95,7 @@ Inside =client-web= run =npm install=.
 
 Start the server:
 #+BEGIN_SRC bash
-  cd server/
+  cd server
   npm run server:local
 #+END_SRC
 
