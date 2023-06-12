@@ -11,7 +11,7 @@ import { createSignal, onCleanup, onMount, on } from "solid-js";
 
 let chatAreaBottomRef;
 let socket;
-const url = "ws://localhost:6969";
+const url = import.meta.env.VITE_SERVER_URL || "ws://localhost:6969";
 
 const connectWebSocket = (setSocketState, setMessages) => {
   socket = new WebSocket(url);
@@ -109,7 +109,10 @@ export default function App() {
   const [messages, setMessages] = createSignal([]);
 
   onMount(() => {
-    setMessages((messages) => [...messages, "Connecting..."]);
+    setMessages((messages) => [
+      ...messages,
+      `Connecting... ${import.meta.env.VITE_SERVER_URL}`,
+    ]);
     connectWebSocket(setSocketState, setMessages);
   });
 
@@ -155,8 +158,8 @@ export default function App() {
               component="div"
               sx={{ flexGrow: 1, fontFamily: "Space Mono" }}
             >
-              {`AnnonChat - ${
-                import.meta.env.VITE_SERVER_NAME || "Anonymous Server"
+              {`AnonChat - ${
+                import.meta.env["VITE_APP_SERVER_NAME"] || "Anonymous Server"
               } `}
               {getConnectionStatus(socketState())}
             </Typography>

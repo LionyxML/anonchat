@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - 6969:6969
+    depends_on:
+      - docked-app-prod
+    environment:
+      - SERVER_NAME=AnonChat
+      - SERVER_NICK=SERVER_BOT
+      - SERVER_PORT=6969
+
+  client-web:
+    build:
+      context: ./client-web
+      dockerfile: Dockerfile
+    ports:
+      - 7979:80
+    depends_on:
+      - docked-app-prod
+      - server
+    # VITE can't deal with environment provided here. Tks Solid + Vite
+    env_file: ./client-web/.env
+
+
+  docked-app-prod:
+    container_name: docked-chat
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8692:8692"

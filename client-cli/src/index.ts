@@ -19,7 +19,7 @@ ws.on("message", (byteMsg) => {
   try {
     serverMsg = JSON.parse(byteMsg.toString());
   } catch {
-    console.log(" AnnonChat - Server tried to send a message but couldn't :(");
+    console.log(" AnonChat - Server tried to send a message but couldn't :(");
   }
 
   const { senderNick, message, timestamp } = serverMsg;
@@ -29,7 +29,7 @@ ws.on("message", (byteMsg) => {
 });
 
 ws.on("close", () => {
-  console.log("  AnnonChat - Disconnected from the server");
+  console.log("  AnonChat - Disconnected from the server");
   process.exit(0);
 });
 
@@ -42,7 +42,7 @@ rl.on("line", (input) => {
 
 rl.on("close", () => {
   console.log(
-    "  AnnonChat - Exiting the client. Shame on you. Use /quit next time."
+    "  AnonChat - Exiting the client. Shame on you. Use /quit next time."
   );
   process.exit(0);
 });
