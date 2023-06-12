@@ -46,11 +46,11 @@ You cannot:
 ** Quick production install / run
 
 To have the app quickly up and running, first go to
-`docker-compose.yml` and set the desired environment variables.
+=docker-compose.yml= and set the desired environment variables.
 
 Server env vars can be set directly into this file, client-web
-variables must be created inside `client-web/.env`. Just copy
-the `.env.example` and set your customizations.
+variables must be created inside =client-web/.env=. Just copy
+the =.env.example= and set your customizations.
 
 Build the app images with:
 #+BEGIN_SRC bash
@@ -62,7 +62,7 @@ Then just start it with:
 docker-compose up
 #+END_SRC
 
-You can access the app frontend on `http://localhost:8692`.
+You can access the app frontend on =http://localhost:8692=.
 
 Notice that if serve this port trought another proxy, the environment
 variable of the web client must contain the final hostname.
@@ -73,16 +73,16 @@ variable of the web client must contain the final hostname.
 
 Clone this repository.
 
-Make sure you have `node 20` installed.
+Make sure you have =node 20= installed.
 
-Remove the `/client-web/.env` file or customize it (all environment
+Remove the =/client-web/.env= file or customize it (all environment
 vars have working defaults if no env vars are provided).
 
-Inside `server` run `npm install`.
+Inside =server= run =npm install=.
 
-Inside `client-cli` run `npm install`.
+Inside =client-cli= run =npm install=.
 
-Inside `client-web` run `npm install`.
+Inside =client-web= run =npm install=.
 
 
 *** Running
@@ -93,7 +93,7 @@ Start the server:
   npm run server:local
 #+END_SRC
 
-You can also start `npm run server:local:watch` that will reload the
+You can also start =npm run server:local:watch= that will reload the
 server whenever you make changes to the code.
 
 Start the client-cli:
@@ -102,7 +102,7 @@ Start the client-cli:
   npm run client:local
 #+END_SRC
 
-There's also a `npm run client:local:watch` that auto reloads when you
+There's also a =npm run client:local:watch= that auto reloads when you
 make changes to the client-cli code.
 
 Start the web-client:
@@ -111,7 +111,7 @@ Start the web-client:
   npm run start
 #+END_SRC
 
-Notice `package.json` of each sub-project has its own set of utilities
+Notice =package.json= of each sub-project has its own set of utilities
 scripts.
 
 
@@ -119,14 +119,14 @@ scripts.
 If you want generate the artifacts on your own (not automatically with
 docker-compose).
 
-Server is compiled with `npm run server:build`, and artifacts are
-generated into `build/src/`.
+Server is compiled with =npm run server:build=, and artifacts are
+generated into =build/src/=.
 
-Client-cli is compiled with `npm run client:build`, and artifacts are
-generated into `build/src/`.
+Client-cli is compiled with =npm run client:build=, and artifacts are
+generated into =build/src/=.
 
-Client-web is compiled with `npm run build`, and artifacts are
-generated into `dist/`.
+Client-web is compiled with =npm run build=, and artifacts are
+generated into =dist/=.
 
 
 
