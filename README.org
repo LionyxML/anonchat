@@ -1,14 +1,133 @@
-# Anonchat
+* Anonchat
 
 A simple websocket chat server/client project.
 
-You can:
-- Customize your nickname
-- Enter / leave channels
-- Talk on channel (one channel only)
+Suggested architeture if you're using `docker-compose`:
 
-You can't:
+#+BEGIN_SRC artist-mode
+
+ +-------------------------+         +-------------------+
+ |                         |         |                   |
+ |         server          |         |        proxy      |
+ |                         |         |                   |
+ |                    6969 +---------+ 6969         8692 |           client-web
+ +-------------------------+         |                   +----+---[ http(s)://host/ ]
+                                     |                   |    |
+                                     |                   |    +---[ ws(s)://host/ws ]
+ +-------------------------+         |                   |           server
+ |                         |         |                   |
+ |       client-web        |         |                   |
+ |                         |         |                   |              +--------------+
+ |                      80 +---------+ 7979              |              |              |
+ +-------------------------+         +-------------------+         []---+  client-cli  |
+                                                                        |              |
+                                                                        +--------------+
+
+#+END_SRC
+
+Server / client-web / client-cli can all be used standalone.
+
+Server and client-cli are NodeJS (JS/Typecript) projects.
+
+Client-web is a NodeJS + SolidJS + Vite (JS/Typescript) project.
+
+This chat app features:
+- Customize your nickname
+- Join / Part channels
+- List channels
+- List users inside a channel
+- Talk on channel
+
+You cannot:
 - Almost everything
 - Trust this is safe
 - Trust this is ready
+
+** Quick production install / run
+
+To have the app quickly up and running, first go to
+`docker-compose.yml` and set the desired environment variables.
+
+Server env vars can be set directly into this file, client-web
+variables must be created inside `client-web/.env`. Just copy
+the `.env.example` and set your customizations.
+
+Build the app images with:
+#+BEGIN_SRC bash
+docker-compose build
+#+END_SRC
+
+Then just start it with:
+#+BEGIN_SRC bash
+docker-compose up
+#+END_SRC
+
+You can access the app frontend on `http://localhost:8692`.
+
+Notice that if serve this port trought another proxy, the environment
+variable of the web client must contain the final hostname.
+
+  
+**  Development Mode
+*** Install
+
+Clone this repository.
+
+Make sure you have `node 20` installed.
+
+Remove the `/client-web/.env` file or customize it (all environment
+vars have working defaults if no env vars are provided).
+
+Inside `server` run `npm install`.
+
+Inside `client-cli` run `npm install`.
+
+Inside `client-web` run `npm install`.
+
+
+*** Running
+
+Start the server:
+#+BEGIN_SRC bash
+  cd server/
+  npm run server:local
+#+END_SRC
+
+You can also start `npm run server:local:watch` that will reload the
+server whenever you make changes to the code.
+
+Start the client-cli:
+#+BEGIN_SRC bash
+  cd client-cli
+  npm run client:local
+#+END_SRC
+
+There's also a `npm run client:local:watch` that auto reloads when you
+make changes to the client-cli code.
+
+Start the web-client:
+#+BEGIN_SRC bash
+  cd client-web
+  npm run start
+#+END_SRC
+
+Notice `package.json` of each sub-project has its own set of utilities
+scripts.
+
+
+*** Building
+If you want generate the artifacts on your own (not automatically with
+docker-compose).
+
+Server is compiled with `npm run server:build`, and artifacts are
+generated into `build/src/`.
+
+Client-cli is compiled with `npm run client:build`, and artifacts are
+generated into `build/src/`.
+
+Client-web is compiled with `npm run build`, and artifacts are
+generated into `dist/`.
+
+
+
 
