@@ -1,4 +1,4 @@
-import { IStoreState, IChannels } from "./index.d";
+import { IStoreState, IChannels, ExtendedWebSocket } from "./index.d";
 import { store } from ".";
 import { SERVER_NICK } from "./config";
 import WebSocket from "ws";
@@ -154,4 +154,9 @@ export const changeNick = (clientId: number, nickName: string) => {
       clientsNicks: [...newClientsNicks],
     };
   });
+};
+
+export const heartbeat = (ws: ExtendedWebSocket, clientIP: string) => {
+  console.log(`>>> Pong received from: ${clientIP}`);
+  ws.isAlive = true;
 };

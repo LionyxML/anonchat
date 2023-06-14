@@ -26,12 +26,10 @@ const connectWebSocket = (setSocketState, setMessages) => {
     chatAreaBottomRef?.scrollIntoView(false);
   });
 
-  socket.addEventListener("close", () => {
+  socket.addEventListener("close", function clear() {
     setSocketState(WebSocket.CLOSED);
-    setMessages((state) => [
-      ...state,
-      "Connection Closed! Trying to reconnect...",
-    ]);
+    setMessages((state) => [...state, "Connection Closed!"]);
+
     setTimeout(() => connectWebSocket(setSocketState, setMessages), 3000);
   });
 };
@@ -115,12 +113,6 @@ export default function App() {
     ]);
     connectWebSocket(setSocketState, setMessages);
   });
-
-  // onCleanup(() => {
-  //   if (socket && socket.readyState === WebSocket.OPEN) {
-  //     socket.close();
-  //   }
-  // });
 
   const onKeyPress = (e) => {
     if (e.key === "Enter") {

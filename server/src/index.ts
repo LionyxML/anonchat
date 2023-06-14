@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import { createStore } from "./store";
-import { IStoreState } from "./index.d";
+import { ExtendedWebSocket, IStoreState } from "./index.d";
 import {
   addClient,
   addClientNick,
@@ -11,10 +11,12 @@ import {
   createChannel,
   currentUserChannels,
   formatClientMsg,
+  heartbeat,
   removeUserFromChannel,
   removeUserFromServer,
 } from "./helpers";
 import { SERVER_NAME, SERVER_NICK, SERVER_PORT } from "./config";
+import { IncomingMessage } from "http";
 
 export const store = createStore<IStoreState>(() => ({
   clients: [],
@@ -25,13 +27,21 @@ export const store = createStore<IStoreState>(() => ({
 }));
 
 const wss = new WebSocketServer({ port: Number(SERVER_PORT) }, () =>
-  console.log(`>>> ${SERVER_NAME} Server Loaded`)
+  console.log(`>>> ${SERVER_NAME} Server Loaded...`)
 );
 
-wss.on("connection", (ws) => {
+wss.on("connection", (ws: ExtendedWebSocket, req: IncomingMessage) => {
+  ws.isAlive = true;
+
+  const clientIP = String(
+    req.headers["x-forwarded-for"] || req.socket.remoteAddress
+  );
+  ws.on("error", console.error);
+  ws.on("pong", () => heartbeat(ws, clientIP));
+
   const { getState } = store;
 
-  console.log("New client connected");
+  console.log(`>>> New client connected: ${clientIP}`);
 
   addClient(ws);
   addClientNick(`client#${getState().clients.indexOf(ws)}`);
@@ -85,7 +95,7 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    switch (parsedMessage[0].toLowerCase()) {
+    switch (String(parsedMessage[0]).toLowerCase()) {
       case "/part": {
         if (userCurrentChannel === "undefined") {
           ws.send(
@@ -216,8 +226,8 @@ wss.on("connection", (ws) => {
 
         if (
           getState()
-            .clientsNicks.map((nick: string) => nick.toLowerCase())
-            .includes(nickName.toLowerCase())
+            .clientsNicks.map((nick: string) => String(nick).toLowerCase())
+            .includes(String(nickName).toLowerCase())
         ) {
           ws.send(
             formatClientMsg(
@@ -249,6 +259,25 @@ wss.on("connection", (ws) => {
         break;
     }
   });
+});
+
+const { getState } = store;
+
+const interval = setInterval(() => {
+  const clientsArray = Array.from(wss.clients) as ExtendedWebSocket[];
+  for (const ws of clientsArray) {
+    if (ws.isAlive === false) {
+      changeNick(getState().clients.indexOf(ws), "no_longer_online");
+      return ws.terminate();
+    }
+
+    ws.isAlive = false;
+    ws.ping();
+  }
+}, 30000);
+
+wss.on("close", () => {
+  clearInterval(interval);
 });
 
 // TODO:
