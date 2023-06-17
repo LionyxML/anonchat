@@ -12,6 +12,7 @@ import {
   currentUserChannels,
   formatClientMsg,
   heartbeat,
+  listChannelUsers,
   removeUserFromChannel,
   removeUserFromServer,
 } from "./helpers";
@@ -44,7 +45,7 @@ wss.on("connection", (ws: ExtendedWebSocket, req: IncomingMessage) => {
   console.log(`>>> New client connected: ${clientIP}`);
 
   addClient(ws);
-  addClientNick(`client#${getState().clients.indexOf(ws)}`);
+  addClientNick(`client_${getState().clients.indexOf(ws)}`);
 
   ws.send(
     formatClientMsg(
@@ -57,6 +58,7 @@ wss.on("connection", (ws: ExtendedWebSocket, req: IncomingMessage) => {
   | Your nickname is ${getState().clientsNicks[getState().clients.indexOf(ws)]}
   |
   | /channels             - lists all channels
+  | /users                - list all users inside current channel 
   | /join [#channel]      - joins #channel creating it if needed
   | /nick [new_nickname]  - changes your nickname
   | /part                 - leaves the channel
@@ -182,6 +184,7 @@ wss.on("connection", (ws: ExtendedWebSocket, req: IncomingMessage) => {
           ws,
           true
         );
+        listChannelUsers(channelName, ws);
 
         break;
       }
@@ -210,6 +213,21 @@ wss.on("connection", (ws: ExtendedWebSocket, req: IncomingMessage) => {
           )
         );
         break;
+
+      case "/users": {
+        if (userCurrentChannels.length === 0) {
+          ws.send(
+            formatClientMsg(
+              SERVER_NICK,
+              "Error: You're not inside any channel. Try /join #channel_name"
+            )
+          );
+          break;
+        }
+
+        listChannelUsers(userCurrentChannel, ws);
+        break;
+      }
 
       case "/nick": {
         const nickName = parsedMessage[1];
@@ -274,7 +292,7 @@ const interval = setInterval(() => {
     ws.isAlive = false;
     ws.ping();
   }
-}, 30000);
+}, 30_000);
 
 wss.on("close", () => {
   clearInterval(interval);

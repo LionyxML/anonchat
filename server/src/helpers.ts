@@ -156,6 +156,21 @@ export const changeNick = (clientId: number, nickName: string) => {
   });
 };
 
+export const listChannelUsers = (userCurrentChannel: string, ws: WebSocket) => {
+  const { getState } = store;
+  const users = getState()
+    .channels[userCurrentChannel].map((user: string[]) => user)
+    .map((userId: string) => getState().clientsNicks[userId])
+    .join(", ");
+
+  ws.send(
+    formatClientMsg(
+      SERVER_NICK,
+      `Current users on #${userCurrentChannel}: ${users}`
+    )
+  );
+};
+
 export const heartbeat = (ws: ExtendedWebSocket, clientIP: string) => {
   console.log(`>>> Pong received from: ${clientIP}`);
   ws.isAlive = true;
