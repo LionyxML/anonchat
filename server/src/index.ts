@@ -58,11 +58,11 @@ wss.on("connection", (ws: ExtendedWebSocket, req: IncomingMessage) => {
   | Your nickname is ${getState().clientsNicks[getState().clients.indexOf(ws)]}
   |
   | /channels             - lists all channels
-  | /users                - list all users inside current channel 
   | /join [#channel]      - joins #channel creating it if needed
   | /nick [new_nickname]  - changes your nickname
   | /part                 - leaves the channel
   | /quit                 - exits the server
+  | /users                - list all users inside current channel 
   |
   `
     )
